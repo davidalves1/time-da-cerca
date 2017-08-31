@@ -9,28 +9,42 @@
           <q-input 
             type="text" 
             stack-label="Nome do jogador" 
-            placeholder="Ronaldo Fenômeno" 
+            placeholder="Ex: Ronaldo Fenômeno" 
             required
             v-model="name" 
           />
         </div>
       </div>
-      <div class="row justify-center">
+      <div class="row text-center">
         <div class="col-12">
           <q-btn @click="addPlayer">Adicionar</q-btn>
-          <q-btn @click="getPlayers">Recarregar</q-btn>
         </div>
       </div>
-      <hr>
-      <div class="row">
+      <q-item-separator />
+      <div class="row options text-center">
         <div class="col-12">
+          <q-btn @click="getPlayers">Jogadores</q-btn>
+          <q-btn @click="sortTeams">Sortear Times</q-btn>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12" v-if="showPlayers">
           <q-list highlight>
-          <q-list-header>Jogadores</q-list-header>
-          <q-item-separator />
-          <q-item v-for="player in players" :key="name.id">
-            {{player}}
-          </q-item>
-        </q-list>
+            <q-list-header>Jogadores</q-list-header>
+            <q-item-separator />
+            <q-item v-for="player in players" :key="name.id">
+              {{player}}
+            </q-item>
+          </q-list>
+        </div>
+        <div class="col-12" v-if="showTeams">
+          <q-list highlight>
+            <q-list-header>Times</q-list-header>
+            <q-item-separator />
+            <q-item v-for="player in players" :key="name.id">
+              {{player}}
+            </q-item>
+          </q-list>
         </div>
       </div>
     </div>
@@ -50,8 +64,9 @@ import {
   QList,
   QListHeader,
   QItemSeparator,
-  QItem
-  // LocalStorage
+  QItem,
+  Toast,
+  LocalStorage
 } from 'quasar'
 
 export default {
@@ -66,14 +81,21 @@ export default {
     QList,
     QListHeader,
     QItemSeparator,
-    QItem
-    // LocalStorage
+    QItem,
+    Toast,
+    LocalStorage
   },
   data () {
     return {
       name: '',
-      players: []
+      players: [],
+      teams: [],
+      showPlayers: true,
+      showTeams: false
     }
+  },
+  mounted () {
+    this.getPlayers()
   },
   computed: {
   },
@@ -82,21 +104,50 @@ export default {
       openURL(url)
     },
     addPlayer () {
-      if (localStorage.players === undefined) {
-        localStorage.setItem('players', '')
+      if (this.name === '' || this.name === undefined) {
+        Toast.create.negative('Informe um nome para o jogador')
+        return
       }
 
-      let players = localStorage.players.split(',')
+      if (localStorage.getItem('players') === null) {
+        localStorage.setItem('players', this.name)
+        this.getPlayers()
+        return
+      }
 
-      players.pop(this.name)
-      console.log(players, this.name)
-      localStorage.setItem('players', players.join())
+      let players = localStorage.getItem('players')
+
+      players = players.split(',')
+
+      players.push(this.name)
+      localStorage.setItem('players', players)
 
       this.getPlayers()
+      this.name = ''
     },
     getPlayers () {
-      this.players = localStorage.players
-      console.log(this.players)
+      let players = localStorage.getItem('players')
+
+      if (players === null || players === undefined) {
+        this.players = ['Nenhum jogador na lista']
+        return
+      }
+
+      this.players = players.split(',')
+
+      this.showPlayers = true
+      this.showTeams = false
+
+      return this.players
+    },
+    sortTeams () {
+      this.showTeams = true
+      this.showPlayers = false
+
+      let lista = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+      let lista2 = lista.sort(() => Math.random() - 0.5)
+
+      console.log(lista2)
     }
   }
 }
@@ -105,4 +156,7 @@ export default {
 <style lang="stylus">
   .content
     margin 1rem
+
+  .options
+    margin 1rem auto
 </style>
